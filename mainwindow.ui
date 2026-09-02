@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>760</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>700</width>
+    <height>560</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Downloader by Saidolimxoja</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="rootLayout">
+    <property name="leftMargin"><number>30</number></property>
+    <property name="topMargin"><number>28</number></property>
+    <property name="rightMargin"><number>30</number></property>
+    <property name="bottomMargin"><number>20</number></property>
+    <property name="spacing"><number>0</number></property>
+
+    <!-- ================= Шапка ================= -->
+    <item>
+     <layout class="QHBoxLayout" name="headerLayout">
+      <property name="spacing"><number>10</number></property>
+      <item>
+       <widget class="QLabel" name="titleLabel">
+        <property name="text"><string>Downloader by Saidolimxoja</string></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="versionChip">
+        <property name="text"><string>v1.1.0</string></property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="headerSpacer">
+        <property name="orientation"><enum>Qt::Horizontal</enum></property>
+        <property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+
+    <item>
+     <spacer name="gapAfterTitle">
+      <property name="orientation"><enum>Qt::Vertical</enum></property>
+      <property name="sizeType"><enum>QSizePolicy::Fixed</enum></property>
+      <property name="sizeHint" stdset="0"><size><width>20</width><height>5</height></size></property>
+     </spacer>
+    </item>
+
+    <item>
+     <widget class="QLabel" name="subtitleLabel">
+      <property name="text"><string>Rutube · VK Видео · YouTube — сначала разбор ролика, потом выбор формата</string></property>
+     </widget>
+    </item>
+
+    <item>
+     <spacer name="gapBeforeInput">
+      <property name="orientation"><enum>Qt::Vertical</enum></property>
+      <property name="sizeType"><enum>QSizePolicy::Fixed</enum></property>
+      <property name="sizeHint" stdset="0"><size><width>20</width><height>24</height></size></property>
+     </spacer>
+    </item>
+
+    <!-- ================= Ввод ссылки ================= -->
+    <item>
+     <layout class="QHBoxLayout" name="inputLayout">
+      <property name="spacing"><number>10</number></property>
+      <item>
+       <widget class="QLineEdit" name="urlLineEdit">
+        <property name="clearButtonEnabled"><bool>true</bool></property>
+        <property name="placeholderText"><string>Вставьте ссылку на Rutube, VK Видео или YouTube (или перетащите сюда)...</string></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pasteButton">
+        <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+        <property name="text"><string>Вставить</string></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="analyzeButton">
+        <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+        <property name="text"><string>Разобрать</string></property>
+        <property name="default"><bool>true</bool></property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+
+    <item>
+     <spacer name="gapBeforeCard">
+      <property name="orientation"><enum>Qt::Vertical</enum></property>
+      <property name="sizeType"><enum>QSizePolicy::Fixed</enum></property>
+      <property name="sizeHint" stdset="0"><size><width>20</width><height>18</height></size></property>
+     </spacer>
+    </item>
+
+    <!-- ================= Карточка разбора ================= -->
+    <item>
+     <widget class="QFrame" name="infoCard">
+      <property name="frameShape"><enum>QFrame::NoFrame</enum></property>
+      <layout class="QVBoxLayout" name="cardLayout">
+       <property name="leftMargin"><number>18</number></property>
+       <property name="topMargin"><number>18</number></property>
+       <property name="rightMargin"><number>18</number></property>
+       <property name="bottomMargin"><number>18</number></property>
+       <property name="spacing"><number>16</number></property>
+
+       <!-- превью + название -->
+       <item>
+        <layout class="QHBoxLayout" name="videoRow">
+         <property name="spacing"><number>16</number></property>
+         <item>
+          <widget class="QLabel" name="thumbLabel">
+           <property name="minimumSize"><size><width>160</width><height>90</height></size></property>
+           <property name="maximumSize"><size><width>160</width><height>90</height></size></property>
+           <property name="alignment"><set>Qt::AlignCenter</set></property>
+           <property name="text"><string>превью</string></property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="videoTextLayout">
+           <property name="spacing"><number>6</number></property>
+           <item>
+            <widget class="QLabel" name="videoTitleLabel">
+             <property name="text"><string>Название ролика</string></property>
+             <property name="wordWrap"><bool>true</bool></property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="videoMetaLabel">
+             <property name="text"><string>канал · длительность</string></property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="videoTextSpacer">
+             <property name="orientation"><enum>Qt::Vertical</enum></property>
+             <property name="sizeHint" stdset="0"><size><width>20</width><height>10</height></size></property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+
+       <!-- выбор формата и качества -->
+       <item>
+        <layout class="QHBoxLayout" name="optionsRow">
+         <property name="spacing"><number>12</number></property>
+         <item>
+          <widget class="QFrame" name="segmentFrame">
+           <property name="frameShape"><enum>QFrame::NoFrame</enum></property>
+           <layout class="QHBoxLayout" name="segmentLayout">
+            <property name="leftMargin"><number>4</number></property>
+            <property name="topMargin"><number>4</number></property>
+            <property name="rightMargin"><number>4</number></property>
+            <property name="bottomMargin"><number>4</number></property>
+            <property name="spacing"><number>4</number></property>
+            <item>
+             <widget class="QPushButton" name="videoModeButton">
+              <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+              <property name="text"><string>Видео + аудио</string></property>
+              <property name="checkable"><bool>true</bool></property>
+              <property name="checked"><bool>true</bool></property>
+              <property name="autoExclusive"><bool>true</bool></property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="audioModeButton">
+              <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+              <property name="text"><string>Только аудио</string></property>
+              <property name="checkable"><bool>true</bool></property>
+              <property name="autoExclusive"><bool>true</bool></property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="optionCaption">
+           <property name="text"><string>Качество</string></property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="qualityCombo">
+           <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="optionsSpacer">
+           <property name="orientation"><enum>Qt::Horizontal</enum></property>
+           <property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="downloadButton">
+           <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+           <property name="text"><string>Скачать</string></property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+
+       <!-- выбор папки сохранения -->
+       <item>
+        <layout class="QHBoxLayout" name="folderRow">
+         <property name="spacing"><number>10</number></property>
+         <item>
+          <widget class="QLabel" name="folderCaption">
+           <property name="text"><string>Папка сохранения:</string></property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="folderPathLabel">
+           <property name="text"><string>...</string></property>
+           <property name="textInteractionFlags"><set>Qt::TextSelectableByMouse</set></property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="folderSpacer">
+           <property name="orientation"><enum>Qt::Horizontal</enum></property>
+           <property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="browseButton">
+           <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+           <property name="text"><string>Обзор...</string></property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+
+      </layout>
+     </widget>
+    </item>
+
+    <item>
+     <spacer name="gapBeforeProgress">
+      <property name="orientation"><enum>Qt::Vertical</enum></property>
+      <property name="sizeType"><enum>QSizePolicy::Fixed</enum></property>
+      <property name="sizeHint" stdset="0"><size><width>20</width><height>22</height></size></property>
+     </spacer>
+    </item>
+
+    <!-- ================= Прогресс и Отмена ================= -->
+    <item>
+     <layout class="QHBoxLayout" name="progressLayout">
+      <property name="spacing"><number>10</number></property>
+      <item>
+       <widget class="QProgressBar" name="progressBar">
+        <property name="minimumSize"><size><width>0</width><height>8</height></size></property>
+        <property name="maximumSize"><size><width>16777215</width><height>8</height></size></property>
+        <property name="minimum"><number>0</number></property>
+        <property name="maximum"><number>100</number></property>
+        <property name="value"><number>0</number></property>
+        <property name="textVisible"><bool>false</bool></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="cancelButton">
+        <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+        <property name="text"><string>Отмена</string></property>
+        <property name="visible"><bool>false</bool></property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+
+    <item>
+     <spacer name="gapBeforeStatus">
+      <property name="orientation"><enum>Qt::Vertical</enum></property>
+      <property name="sizeType"><enum>QSizePolicy::Fixed</enum></property>
+      <property name="sizeHint" stdset="0"><size><width>20</width><height>12</height></size></property>
+     </spacer>
+    </item>
+
+    <!-- ================= Статус и Действия ================= -->
+    <item>
+     <layout class="QHBoxLayout" name="statusActionRow">
+      <property name="spacing"><number>12</number></property>
+      <item>
+       <widget class="QLabel" name="statusLabel">
+        <property name="text"><string>Готов к работе</string></property>
+        <property name="wordWrap"><bool>true</bool></property>
+        <property name="textInteractionFlags"><set>Qt::TextSelectableByMouse</set></property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="statusSpacer">
+        <property name="orientation"><enum>Qt::Horizontal</enum></property>
+        <property name="sizeHint" stdset="0"><size><width>20</width><height>20</height></size></property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="openFileButton">
+        <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+        <property name="text"><string>Открыть файл</string></property>
+        <property name="visible"><bool>false</bool></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="openFolderButton">
+        <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+        <property name="text"><string>Показать в папке</string></property>
+        <property name="visible"><bool>false</bool></property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+
+    <item>
+     <spacer name="bottomSpacer">
+      <property name="orientation"><enum>Qt::Vertical</enum></property>
+      <property name="sizeHint" stdset="0"><size><width>20</width><height>10</height></size></property>
+     </spacer>
+    </item>
+
+    <!-- ================= Подвал ================= -->
+    <item>
+     <layout class="QHBoxLayout" name="footerLayout">
+      <property name="spacing"><number>10</number></property>
+      <item>
+       <widget class="QLabel" name="hintLabel">
+        <property name="text"><string>Выберите папку и формат перед скачиванием</string></property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="footerSpacer">
+        <property name="orientation"><enum>Qt::Horizontal</enum></property>
+        <property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="telegramButton">
+        <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+        <property name="text"><string>Created by Saidolimxoja</string></property>
+        <property name="flat"><bool>true</bool></property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+
+   </layout>
+  </widget>
+ </widget>
+ <tabstops>
+  <tabstop>urlLineEdit</tabstop>
+  <tabstop>pasteButton</tabstop>
+  <tabstop>analyzeButton</tabstop>
+  <tabstop>videoModeButton</tabstop>
+  <tabstop>audioModeButton</tabstop>
+  <tabstop>qualityCombo</tabstop>
+  <tabstop>browseButton</tabstop>
+  <tabstop>downloadButton</tabstop>
+  <tabstop>cancelButton</tabstop>
+  <tabstop>openFileButton</tabstop>
+  <tabstop>openFolderButton</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

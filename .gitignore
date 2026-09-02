@@ -1,0 +1,17 @@
+# Временные папки сборки и дистрибутивов
+build/
+dist/
+dist-v1/
+*.zip
+.qtcreator/
+.remember/
+
+# Кэш qmake и Makefile
+*.qmake.stash
+Makefile*
+release/
+debug/
+
+# Объектные файлы
+*.o
+*.obj

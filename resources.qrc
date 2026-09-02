@@ -1,0 +1,32 @@
+<!--
+  resources.qrc — реестр вшиваемых в .exe утилит.
+
+  Пути указаны ОТНОСИТЕЛЬНО этого .qrc-файла, поэтому дублировать
+  176 МБ бинарников не нужно: они остаются лежать в tools/yt-dlp_win/.
+
+  =========  КУДА ФИЗИЧЕСКИ КЛАСТЬ ФАЙЛЫ ПЕРЕД КОМПИЛЯЦИЕЙ  =========
+      c:\Projects\Qt-downloader\tools\yt-dlp_win\yt-dlp.exe
+      c:\Projects\Qt-downloader\tools\yt-dlp_win\ffmpeg.exe
+      c:\Projects\Qt-downloader\tools\yt-dlp_win\_internal\...
+  ===================================================================
+
+  В ресурсах они окажутся как  :/bin/yt-dlp.exe  и  :/bin/ffmpeg.exe
+  (prefix="/bin" + alias у каждого файла).
+
+  ffplay.exe / ffprobe.exe НЕ вшиты намеренно: это +290 МБ, а для склейки
+  видео+аудио в FullHD/4K они yt-dlp не нужны. Нужен ffprobe — раскомментируйте.
+-->
+<RCC>
+    <qresource prefix="/bin">
+
+        <!-- ============ Основные утилиты ============ -->
+        <file alias="yt-dlp.exe">tools/yt-dlp_win/yt-dlp.exe</file>
+        <file alias="ffmpeg.exe">tools/yt-dlp_win/ffmpeg.exe</file>
+        <!-- <file alias="ffprobe.exe">tools/yt-dlp_win/ffprobe.exe</file> -->
+
+    </qresource>
+    <qresource prefix="/ui">
+        <file>style.qss</file>
+        <file alias="app.ico">app.ico</file>
+    </qresource>
+</RCC>

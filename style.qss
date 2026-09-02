@@ -1,0 +1,359 @@
+/* =====================================================================
+   Downloader by Saidolimxoja — светлая тема.
+
+   Палитра взята из Retail_Opener: светлый фон, белые карточки, зелёный
+   акцент. Подтянуто три вещи, которые там старили картинку:
+     * радиусы 5px -> 11-16px (мелкое скругление читается как «2010-е»);
+     * font-weight: bold почти везде -> вес 600 только у заголовков и кнопок;
+     * рамки 2px -> 1px в приглушённом сером.
+
+   Файл вшит в ресурсы как :/ui/style.qss и грузится в main.cpp.
+   ===================================================================== */
+
+/* ---------- база ---------- */
+
+QWidget {
+    font-family: "Segoe UI Variable Text", "Segoe UI", "Inter", sans-serif;
+    font-size: 13px;
+    color: #0F172A;
+}
+
+QMainWindow,
+QWidget#centralwidget {
+    background-color: #F5F7FA;
+}
+
+/* ---------- шапка ---------- */
+
+QLabel#titleLabel {
+    font-size: 22px;
+    font-weight: 600;
+    color: #0F172A;
+}
+
+QLabel#versionChip {
+    font-size: 11px;
+    font-weight: 500;
+    color: #16A34A;
+    background-color: #ECFDF3;
+    border: 1px solid #BBF7D0;
+    border-radius: 9px;
+    padding: 2px 9px;
+}
+
+QLabel#subtitleLabel {
+    font-size: 12px;
+    color: #64748B;
+}
+
+/* ---------- поле ввода ссылки ---------- */
+
+QLineEdit {
+    background-color: #FFFFFF;
+    border: 1px solid #E3E8EF;
+    border-radius: 11px;
+    padding: 0 14px;
+    min-height: 42px;
+    color: #0F172A;
+    selection-background-color: #16A34A;
+    selection-color: #FFFFFF;
+}
+
+QLineEdit:hover {
+    border-color: #CBD5E1;
+}
+
+QLineEdit:focus {
+    border-color: #16A34A;
+}
+
+QLineEdit:disabled {
+    background-color: #F1F5F9;
+    color: #94A3B8;
+    border-color: #E3E8EF;
+}
+
+/* ---------- основные кнопки ---------- */
+
+QPushButton#analyzeButton,
+QPushButton#downloadButton {
+    background-color: #16A34A;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 11px;
+    padding: 0 24px;
+    min-height: 44px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+QPushButton#analyzeButton:hover,
+QPushButton#downloadButton:hover {
+    background-color: #15803D;
+}
+
+QPushButton#analyzeButton:pressed,
+QPushButton#downloadButton:pressed {
+    background-color: #166534;
+}
+
+QPushButton#analyzeButton:disabled,
+QPushButton#downloadButton:disabled {
+    background-color: #E3E8EF;
+    color: #94A3B8;
+}
+
+QPushButton#pasteButton,
+QPushButton#browseButton {
+    background-color: #F1F5F9;
+    color: #475569;
+    border: 1px solid #E3E8EF;
+    border-radius: 11px;
+    padding: 0 16px;
+    min-height: 42px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+QPushButton#pasteButton:hover,
+QPushButton#browseButton:hover {
+    background-color: #E2E8F0;
+    color: #0F172A;
+    border-color: #CBD5E1;
+}
+
+QPushButton#browseButton {
+    min-height: 32px;
+    border-radius: 9px;
+    padding: 0 12px;
+}
+
+QPushButton#cancelButton {
+    background-color: #FEF2F2;
+    color: #EF4444;
+    border: 1px solid #FCA5A5;
+    border-radius: 9px;
+    padding: 0 14px;
+    min-height: 32px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+QPushButton#cancelButton:hover {
+    background-color: #FEE2E2;
+    border-color: #F87171;
+}
+
+QPushButton#openFileButton,
+QPushButton#openFolderButton {
+    background-color: #ECFDF3;
+    color: #16A34A;
+    border: 1px solid #BBF7D0;
+    border-radius: 9px;
+    padding: 0 14px;
+    min-height: 32px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+QPushButton#openFileButton:hover,
+QPushButton#openFolderButton:hover {
+    background-color: #DCFCE7;
+    border-color: #86EFAC;
+}
+
+QLabel#folderCaption {
+    font-size: 12px;
+    color: #64748B;
+}
+
+QLabel#folderPathLabel {
+    font-size: 12px;
+    color: #0F172A;
+    font-weight: 500;
+}
+
+/* ---------- карточка с разбором ролика ---------- */
+
+QFrame#infoCard {
+    background-color: #FFFFFF;
+    border: 1px solid #E3E8EF;
+    border-radius: 16px;
+}
+
+QLabel#thumbLabel {
+    background-color: #EEF2F6;
+    border: 1px solid #E3E8EF;
+    border-radius: 10px;
+    color: #94A3B8;
+    font-size: 11px;
+}
+
+QLabel#videoTitleLabel {
+    font-size: 15px;
+    font-weight: 600;
+    color: #0F172A;
+}
+
+QLabel#videoMetaLabel {
+    font-size: 12px;
+    color: #64748B;
+}
+
+QLabel#optionCaption {
+    font-size: 12px;
+    color: #64748B;
+}
+
+/* ---------- переключатель «видео / аудио» ---------- */
+/* Сегментированный контрол вместо радиокнопок: радиокнопки в QSS
+   толком не стилизуются и тянут за собой вид из 2000-х. */
+
+QFrame#segmentFrame {
+    background-color: #EEF2F6;
+    border: 1px solid #E3E8EF;
+    border-radius: 12px;
+}
+
+/* Насечка: font-weight одинаковый в обоих состояниях. Если делать
+   нажатую кнопку жирнее, Qt считает ширину по НЕнажатому начертанию,
+   и текст «Только аудио» обрезается прямо в момент выбора. */
+QPushButton#videoModeButton,
+QPushButton#audioModeButton {
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    padding: 0 16px;
+    min-height: 34px;
+    min-width: 104px;
+    color: #64748B;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+QPushButton#videoModeButton:hover,
+QPushButton#audioModeButton:hover {
+    color: #0F172A;
+}
+
+QPushButton#videoModeButton:checked,
+QPushButton#audioModeButton:checked {
+    background-color: #FFFFFF;
+    border-color: #E3E8EF;
+    color: #0F172A;
+}
+
+/* ---------- выбор качества ---------- */
+
+QComboBox {
+    background-color: #FFFFFF;
+    border: 1px solid #E3E8EF;
+    border-radius: 10px;
+    padding: 0 12px;
+    min-height: 36px;
+    min-width: 140px;
+    color: #0F172A;
+}
+
+QComboBox:hover {
+    border-color: #CBD5E1;
+}
+
+QComboBox:focus {
+    border-color: #16A34A;
+}
+
+QComboBox:disabled {
+    background-color: #F1F5F9;
+    color: #94A3B8;
+}
+
+QComboBox::drop-down {
+    border: none;
+    width: 26px;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #FFFFFF;
+    border: 1px solid #E3E8EF;
+    border-radius: 10px;
+    padding: 4px;
+    outline: none;
+    selection-background-color: #ECFDF3;
+    selection-color: #0F172A;
+}
+
+/* ---------- прогресс ---------- */
+
+QProgressBar {
+    background-color: #E9EEF5;
+    border: none;
+    border-radius: 4px;
+    text-align: center;
+    color: transparent;
+}
+
+QProgressBar::chunk {
+    background-color: #16A34A;
+    border-radius: 4px;
+}
+
+/* ---------- подписи ---------- */
+
+QLabel#statusLabel {
+    font-size: 12px;
+    color: #475569;
+}
+
+QLabel#hintLabel {
+    font-size: 11px;
+    color: #94A3B8;
+}
+
+/* ---------- ссылка на Telegram ---------- */
+/* Пилюля в фирменном телеграмовском синем: узнаётся мгновенно
+   и не спорит с зелёным акцентом интерфейса. */
+
+QPushButton#telegramButton {
+    background-color: transparent;
+    border: 1px solid #DCE3EC;
+    border-radius: 16px;
+    padding: 0 14px;
+    min-height: 30px;
+    color: #229ED9;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+QPushButton#telegramButton:hover {
+    background-color: #F0F9FF;
+    border-color: #229ED9;
+}
+
+QPushButton#telegramButton:pressed {
+    background-color: #E0F2FE;
+}
+
+/* ---------- диалоги об ошибках ---------- */
+
+QMessageBox {
+    background-color: #FFFFFF;
+}
+
+QMessageBox QLabel {
+    color: #0F172A;
+}
+
+QMessageBox QPushButton {
+    background-color: #16A34A;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 9px;
+    padding: 7px 20px;
+    min-width: 82px;
+    font-weight: 600;
+}
+
+QMessageBox QPushButton:hover {
+    background-color: #15803D;
+}
