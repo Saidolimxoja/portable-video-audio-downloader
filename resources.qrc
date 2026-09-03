@@ -22,11 +22,15 @@
         <!-- ============ Основные утилиты ============ -->
         <file alias="yt-dlp.exe">tools/yt-dlp_win/yt-dlp.exe</file>
         <file alias="ffmpeg.exe">tools/yt-dlp_win/ffmpeg.exe</file>
+        <file alias="cookies.txt">tools/yt-dlp_win/cookies.txt</file>
         <!-- <file alias="ffprobe.exe">tools/yt-dlp_win/ffprobe.exe</file> -->
 
     </qresource>
     <qresource prefix="/ui">
         <file>style.qss</file>
         <file alias="app.ico">app.ico</file>
+    </qresource>
+    <qresource prefix="/i18n">
+        <file alias="app_en.qm">translations/app_en.qm</file>
     </qresource>
 </RCC>

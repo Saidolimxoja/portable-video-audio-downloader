@@ -42,6 +42,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QPushButton" name="languageButton">
+        <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+        <property name="text"><string>🌐 EN</string></property>
+        <property name="flat"><bool>true</bool></property>
+       </widget>
+      </item>
+      <item>
        <spacer name="headerSpacer">
         <property name="orientation"><enum>Qt::Horizontal</enum></property>
         <property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property>
@@ -79,13 +86,7 @@
       <item>
        <widget class="QLineEdit" name="urlLineEdit">
         <property name="clearButtonEnabled"><bool>true</bool></property>
-        <property name="placeholderText"><string>Вставьте ссылку на Rutube, VK Видео или YouTube (или перетащите сюда)...</string></property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="pasteButton">
-        <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
-        <property name="text"><string>Вставить</string></property>
+        <property name="placeholderText"><string>Вставьте ссылку на Instagram, YouTube, Rutube, VK Видео (или перетащите сюда)...</string></property>
        </widget>
       </item>
       <item>
@@ -304,6 +305,13 @@
        </spacer>
       </item>
       <item>
+       <widget class="QPushButton" name="cookiesButton">
+        <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+        <property name="text"><string>🍪 Указать cookies.txt...</string></property>
+        <property name="visible"><bool>false</bool></property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="openFileButton">
         <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
         <property name="text"><string>Открыть файл</string></property>
@@ -337,6 +345,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QPushButton" name="updateEngineButton">
+        <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+        <property name="text"><string>🔄 Обновить парсеры</string></property>
+        <property name="flat"><bool>true</bool></property>
+       </widget>
+      </item>
+      <item>
        <spacer name="footerSpacer">
         <property name="orientation"><enum>Qt::Horizontal</enum></property>
         <property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property>
@@ -357,7 +372,6 @@
  </widget>
  <tabstops>
   <tabstop>urlLineEdit</tabstop>
-  <tabstop>pasteButton</tabstop>
   <tabstop>analyzeButton</tabstop>
   <tabstop>videoModeButton</tabstop>
   <tabstop>audioModeButton</tabstop>

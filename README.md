@@ -1,301 +1,204 @@
 # Downloader by Saidolimxoja
 
-Портативный загрузчик видео на Qt 6. В `.exe` вшиты `yt-dlp.exe` и
-`ffmpeg.exe` — пользователю не нужно ничего доустанавливать.
+**Free, open-source, portable video downloader** built with Qt 6.
+Downloads from YouTube, Instagram, TikTok, Rutube, VK Video and [1000+ other sites](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md).
 
-## Как это работает
+**Бесплатный, портативный загрузчик видео с открытым исходным кодом** на Qt 6.
+Скачивает с YouTube, Instagram, TikTok, Rutube, VK Видео и [1000+ других сайтов](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md).
 
-1. При первом действии всё содержимое ресурса `:/bin` рекурсивно извлекается
-   в `%TEMP%\said_downloader\`.
-2. Оттуда скрыто (без чёрного окна консоли, флаг `CREATE_NO_WINDOW`)
-   запускается `yt-dlp.exe`.
-3. **Разбор.** `--dump-single-json` отдаёт название, канал, длительность и
-   список форматов. Из него собирается перечень реально доступных качеств.
-   Превью тянется отдельным запуском yt-dlp и конвертируется в PNG.
-4. **Выбор.** Сегментированный переключатель «Видео + аудио» / «Только аудио»
-   плюс выпадающий список качества. Для аудио выбор разрешения гаснет.
-5. **Скачивание.** Вывод yt-dlp парсится регулярками — проценты, скорость и
-   ETA идут в `QProgressBar` и `QLabel`.
-6. Файл сохраняется в системную папку «Загрузки» по шаблону
-   `%(title)s.%(ext)s`.
-7. При закрытии окна деструктор гасит дерево процессов (`taskkill /T /F` —
-   вместе с дочерним ffmpeg) и полностью удаляет `%TEMP%\said_downloader`.
+Everything is bundled inside a single `.exe` — no installation required.
+Всё вшито в один `.exe` — установка не нужна.
 
-## Форматы
+---
 
-| Режим | Аргументы yt-dlp |
+## ⬇️ Download / Скачать
+
+**[Download Latest Release / Скачать последнюю версию (v2.0.0)](https://github.com/Saidolimxoja/Downloader-QT/releases/latest)**
+
+> Just unzip and run `SaidDownloader.exe` — no installer, no setup, completely portable.
+> Просто распакуйте и запустите `SaidDownloader.exe` — без установщика, полностью портативно.
+
+| File / Файл | Size / Размер |
 |---|---|
-| Видео + аудио, качество N | `-f "bv*[height<=N]+ba/b[height<=N]" --merge-output-format mp4` |
-| Видео + аудио, лучшее | `-f "bv*+ba/b" --merge-output-format mp4` |
-| Только аудио | `-x --audio-format mp3 --audio-quality 0` |
+| `SaidDownloader_v2.0.zip` | ~66 MB |
+| Unpacked folder / Распакованная папка | ~96 MB |
 
-## Куда физически кладутся бинарники
+---
 
-`resources.qrc` ссылается на файлы **относительно себя**, поэтому дублировать
-176 МБ не нужно — они лежат ровно там, где уже лежат:
+## ✨ Features / Возможности
 
-```
-c:\Projects\Qt-downloader\
-├── tools\yt-dlp_win\
-│   ├── yt-dlp.exe          ← вшивается как :/bin/yt-dlp.exe
-│   ├── ffmpeg.exe          ← вшивается как :/bin/ffmpeg.exe
-│   ├── ffplay.exe          ← НЕ вшивается (не нужен, +147 МБ)
-│   ├── ffprobe.exe         ← НЕ вшивается (опционально, +145 МБ)
-│   └── _internal\          ← вшивается целиком: Python-рантайм для yt-dlp
-├── SaidDownloader.pro
-├── resources.qrc
-├── main.cpp
-├── mainwindow.h / .cpp / .ui
-└── README.md
-```
+- 🎬 **Video + Audio / Видео + Аудио** — download in MP4 with quality selection (360p–4K) / скачивание в MP4 с выбором качества
+- 🎵 **Audio only / Только аудио** — extracts MP3 at best quality / извлечение MP3 в лучшем качестве
+- 🔍 **Video analysis / Разбор ролика** — shows title, channel, duration, thumbnail / показывает название, канал, длительность, превью
+- 📋 **Paste & Go / Вставить и вперёд** — paste from clipboard with one click / вставка из буфера одним кликом
+- 🖱️ **Drag & Drop / Перетаскивание** — drop a link onto the window / перетащите ссылку на окно
+- 🍪 **Smart cookies / Умные куки** — auto-tries Chrome, Edge, Firefox, Brave, Opera for private content / автоперебор браузеров для закрытого контента
+- 🔄 **Self-updating / Самообновление** — update yt-dlp parsers from within the app / обновление парсеров yt-dlp из приложения
+- 🌐 **Bilingual UI / Двуязычный интерфейс** — switch between English and Russian in one click / переключение EN ↔ RU одной кнопкой
+- ⚡ **Fast downloads / Быстрое скачивание** — 16 concurrent fragments for HLS/DASH streams / 16 параллельных фрагментов
+- 🛡️ **Portable / Портативность** — no installation, no registry, no admin rights needed / без установки, реестра и прав администратора
 
-## Версия
+---
 
-Меняется **в одном месте** — строка `VERSION` в `SaidDownloader.pro`:
+## 🖼️ How It Works / Как это работает
 
-```qmake
-VERSION = 1.1.0
-```
+1. **Paste a link** (or drag & drop it) and click **Analyze**
+   **Вставьте ссылку** (или перетащите) и нажмите **Разобрать**
+2. Choose **Video + Audio** or **Audio only**, select quality
+   Выберите **Видео + Аудио** или **Только аудио**, укажите качество
+3. Click **Download** — progress bar shows speed and ETA
+   Нажмите **Скачать** — прогресс-бар покажет скорость и оставшееся время
+4. **Open file** or **Show in folder** when done
+   По завершении — **Открыть файл** или **Показать в папке**
 
-Оттуда она разъезжается сразу в три места:
+---
 
-1. **Свойства файла в проводнике** — ПКМ по `.exe` → Свойства → Подробно.
-   qmake сам генерирует ресурс `VERSIONINFO`, вручную писать `.rc` не нужно.
-   Заодно туда попадают `QMAKE_TARGET_PRODUCT`, `QMAKE_TARGET_COMPANY`,
-   `QMAKE_TARGET_DESCRIPTION`, `QMAKE_TARGET_COPYRIGHT`.
-2. **Макрос `APP_VERSION` в C++** — через `DEFINES += APP_VERSION=\\\"$$VERSION\\\"`.
-   В `main.cpp` уходит в `QApplication::setApplicationVersion()`.
-3. **Плашка в шапке окна** — `mainwindow.cpp` читает
-   `QCoreApplication::applicationVersion()` и рисует `v1.1.0`.
+## 🏗️ Architecture / Архитектура
 
-Формат — `МАЖОРНАЯ.МИНОРНАЯ.ПАТЧ`. Windows хранит версию четырьмя числами,
-недостающее qmake добивает нулём сам.
+The app is a Qt 6 / C++17 application that wraps `yt-dlp` and `ffmpeg`.
+Приложение на Qt 6 / C++17, обёртка над `yt-dlp` и `ffmpeg`.
 
-## Грабли, на которые уже наступили
+1. On first run, `yt-dlp.exe` and `ffmpeg.exe` are extracted from embedded Qt resources into `%TEMP%\Downloader_by_Saidolimxoja_<PID>/`
+   При первом запуске `yt-dlp.exe` и `ffmpeg.exe` извлекаются из вшитых ресурсов Qt в `%TEMP%\Downloader_by_Saidolimxoja_<PID>/`
+2. `yt-dlp` is launched as a hidden subprocess (no console window)
+   `yt-dlp` запускается скрытым подпроцессом (без окна консоли)
+3. **Analysis**: `--dump-single-json` returns video metadata as JSON
+   **Разбор**: `--dump-single-json` возвращает метаданные ролика в JSON
+4. **Download**: output is parsed line-by-line with regex for progress, speed, ETA
+   **Скачивание**: вывод парсится построчно регулярками — прогресс, скорость, ETA
+5. On exit, the temp folder and all child processes are cleaned up
+   При выходе временная папка и все дочерние процессы удаляются
 
-Записано, чтобы не наступить снова.
+---
 
-* **Превью в JPEG не грузится.** Поддержка PNG вкомпилирована в QtGui,
-  а JPEG — это отдельный плагин `imageformats/qjpeg.dll`. Без него
-  `QPixmap::load("thumb.jpg")` молча возвращает false. Поэтому превью
-  конвертируется в **PNG** (`--convert-thumbnails png`) — папка `dist`
-  остаётся без лишней DLL.
-* **Конвертация превью обязательна в принципе.** YouTube отдаёт `.webp`,
-  который Qt без плагина `qwebp` тоже не откроет.
-* **Разный font-weight у состояний кнопки обрезает текст.** Если нажатая
-  кнопка сегмента жирнее ненажатой, Qt считает ширину по ненажатому
-  начертанию, и «Только аудио» обрезается в «олько ауди». Вес одинаковый
-  в обоих состояниях, различие — только фон и цвет.
-* **Кириллица в QMAKE_TARGET_*.** qmake кладёт эти строки в генерируемый
-  `.rc`, а `windres` компилирует его не в UTF-8 — в свойствах файла
-  получается «Р СџР С•РЎР‚...». Только латиница.
-* **Иконка Telegram рисуется через QPainter.** `QIcon` из `.svg` требует
-  модуль QtSvg и `qsvg.dll` рядом с exe; символ `✈` из Segoe UI рисуется
-  невнятной чёрточкой.
-* **Карточку нужно ограничить по высоте.** Без
-  `setSizePolicy(Preferred, Maximum)` при разворачивании окна она
-  растягивается, и внутри зияет пустота.
+## 📝 Download Formats / Форматы скачивания
 
-## Оформление
+| Mode / Режим | yt-dlp arguments / аргументы |
+|---|---|
+| Video + Audio, quality N / Видео + аудио, качество N | `-f "bv*[height<=N]+ba/b[height<=N]" --merge-output-format mp4` |
+| Video + Audio, best / Видео + аудио, лучшее | `-f "bv*+ba/b" --merge-output-format mp4` |
+| Audio only / Только аудио | `-x --audio-format mp3 --audio-quality 0` |
 
-Тема лежит отдельным файлом `style.qss`, вшита в ресурсы как `:/ui/style.qss`
-и грузится в `main.cpp`. Правки видно после пересборки, лезть в C++ не нужно.
+---
 
-Ключевые решения:
+## 🌐 Localization / Локализация
 
-* **Стиль Fusion как база.** Нативный `windowsvista` рисует собственные рамки
-  поверх QSS, и половина правил молча не применяется.
-* **Палитра из Retail_Opener** — светлый фон, белые карточки, зелёный акцент
-  `#16A34A`. Подтянуто три вещи, которые там старили картинку: радиусы 5px →
-  11–16px, `font-weight: bold` почти везде → вес 600 только у заголовков и
-  кнопок, рамки 2px → 1px.
-* **Ни одного градиента.** Объёмные кнопки с бликами — главная примета
-  интерфейсов двухтысячных.
-* **Сегментированный контрол вместо радиокнопок** — радиокнопки в QSS толком
-  не стилизуются и тянут за собой тот же вид из 2000-х.
-* **Полоса прогресса 8 px без текста процентов** — цифры дублировали бы
-  статусную строку под ней.
-* **Ссылка на Telegram** — пилюля в фирменном синем `#229ED9`. Адрес задан
-  одной строкой `kTelegramUrl` в начале `mainwindow.cpp`.
+The UI supports **Russian** (default) and **English**. Click the 🌐 button in the header to switch.
+Интерфейс поддерживает **русский** (по умолчанию) и **английский**. Кнопка 🌐 в шапке переключает язык.
 
-## Сборка
+The translation system uses Qt's built-in `QTranslator`:
+Система переводов использует встроенный `QTranslator`:
 
-Qt Creator → открыть `SaidDownloader.pro` → комплект **Qt 6.x MSVC2019 x64**
-или **MinGW x64** → сборка в конфигурации **Release**.
+- Source strings are in Russian (in the code via `tr()`) / Исходные строки на русском
+- English translations are in `translations/app_en.ts` / Английский перевод в `translations/app_en.ts`
+- Compiled `.qm` file is embedded in resources / Скомпилированный `.qm` вшит в ресурсы
 
-Из командной строки (MinGW):
+**To add a new language / Добавление нового языка:**
+1. Copy / Скопируйте `translations/app_en.ts` → `translations/app_XX.ts`
+2. Translate the strings / Переведите строки
+3. Run / Запустите `lrelease translations/app_XX.ts`
+4. Add to `resources.qrc` and load in `loadSettings()` / Добавьте в `resources.qrc` и загрузите в `loadSettings()`
 
-```
+---
+
+## 🔧 Building from Source / Сборка из исходников
+
+### Prerequisites / Требования
+
+- **Qt 6.x** (tested with / проверено на 6.5.3)
+- **MSVC 2019/2022 x64** or / или **MinGW x64**
+- **yt-dlp.exe** and / и **ffmpeg.exe** in / в `tools/yt-dlp_win/`
+
+### Build Steps / Шаги сборки
+
+```bash
+# Qt Creator: Open SaidDownloader.pro → Kit: Qt 6.x MSVC/MinGW x64 → Release
+# Qt Creator: Откройте SaidDownloader.pro → Комплект: Qt 6.x MSVC/MinGW x64 → Release
+
+# From command line (MinGW) / Из командной строки (MinGW):
 mkdir build && cd build
 C:\Qt\6.5.3\mingw_64\bin\qmake.exe ..\SaidDownloader.pro
 C:\Qt\Tools\mingw1120_64\bin\mingw32-make.exe
+
+# Compile translations / Компиляция переводов:
+C:\Qt\6.5.3\mingw_64\bin\lrelease.exe translations\app_en.ts
 ```
 
-### Почему в .pro стоит `CONFIG += resources_big`
+### Why `CONFIG += resources_big`? / Зачем `resources_big`?
 
-Без него `rcc` генерирует один гигантский C++-массив на 176 МБ, и компилятор
-на нём задыхается. С `resources_big` используется режим `-pass 1 / -pass 2`:
-данные попадают прямо в объектный файл. Для MSVC дополнительно включён
-`/bigobj`, для кириллицы в исходниках — `/utf-8`.
+The binary embeds ~176 MB of tools. Without `resources_big`, `rcc` generates a massive C++ array that crashes the compiler. This flag uses a two-pass object file approach instead.
 
-## Почему это папка, а не один файл
+В бинарник вшито ~176 МБ утилит. Без `resources_big` rcc генерирует гигантский C++-массив, на котором компилятор задыхается. Этот флаг использует двухпроходную генерацию объектного файла.
 
-Утилиты (`yt-dlp`, `ffmpeg`) внутри `.exe` — да, а вот **сам Qt снаружи**.
-`objdump -p` по готовому бинарнику показывает импорты:
+### Resource compression / Сжатие ресурсов
 
-```
-Qt6Core.dll  Qt6Gui.dll  Qt6Widgets.dll  libgcc_s_seh-1.dll  libstdc++-6.dll
+```qmake
+QMAKE_RESOURCE_FLAGS += -compress 9 -threshold 5
 ```
 
-Стандартный установщик Qt ставит **shared**-сборку, поэтому рядом с exe нужны:
+Measured / Замерено: ffmpeg.exe 139 MB → 53 MB in the final binary / в итоговом бинарнике.
+
+---
+
+## 📦 Distribution / Дистрибуция
+
+The built `.exe` requires Qt DLLs alongside it:
+Собранный `.exe` требует DLL рядом с собой:
 
 ```
-dist\
-├── SaidDownloader.exe            167.9 МБ
-├── Qt6Core.dll                     6.2 МБ
-├── Qt6Gui.dll                      9.5 МБ
-├── Qt6Widgets.dll                  6.3 МБ
-├── libgcc_s_seh-1.dll              0.1 МБ
-├── libstdc++-6.dll                 1.9 МБ
-├── libwinpthread-1.dll             0.1 МБ
-├── platforms\qwindows.dll          1.0 МБ   ← без него Qt не стартует вообще
-└── styles\qwindowsvistastyle.dll   0.2 МБ
-                                   ────────
-                                    193.2 МБ
+dist/
+├── SaidDownloader.exe         55.6 MB
+├── Qt6Core.dll                 6.5 MB
+├── Qt6Gui.dll                 10.0 MB
+├── Qt6Widgets.dll              6.6 MB
+├── libgcc_s_seh-1.dll          0.1 MB
+├── libstdc++-6.dll             2.0 MB
+├── libwinpthread-1.dll         0.1 MB
+├── platforms/qwindows.dll      1.0 MB
+└── styles/qwindowsvistastyle.dll 0.2 MB
 ```
 
-Папку можно носить целиком — на чужой машине ничего доустанавливать не нужно.
+The entire folder is portable — just copy it to any Windows machine.
+Всю папку можно носить целиком — на чужой машине ничего доустанавливать не нужно.
 
-`windeployqt` на этом проекте падает с `Unable to find the platform plugin`,
-хотя `qmake -query QT_INSTALL_PLUGINS` отдаёт корректный путь. DLL разложены
-вручную по списку из `objdump`.
+### Single-file packaging / Упаковка в один файл
 
-### Если всё же нужен ровно один файл
+**Option 1 — Static Qt build** (recommended): Link Qt statically so the `.exe` has zero dependencies. Takes 2–3 hours to build Qt from source.
 
-**Вариант 1 — статическая сборка Qt.** Настоящее решение: exe не зависит ни от
-чего, антивирусы не ругаются, делается один раз и дальше каждая сборка сразу
-монолитная.
+**Вариант 1 — Статическая сборка Qt** (рекомендуется): Слинковать Qt статически, чтобы `.exe` не зависел ни от чего. Занимает 2–3 часа на сборку Qt из исходников.
 
-```
-# 1. Через C:\Qt\MaintenanceTool.exe доставить:
-#      Qt 6.5.3 -> Sources          (~900 МБ)
-#      Developer and Designer Tools -> CMake, Ninja
-# 2. Собрать qtbase статически:
-cd C:\Qt\6.5.3\Src\qtbase
-configure -static -static-runtime -release -opensource -confirm-license ^
-          -prefix C:\Qt\6.5.3\static-mingw -nomake examples -nomake tests
-cmake --build . --parallel 4
-cmake --install .
-# 3. Собирать проект уже этим qmake:
-C:\Qt\6.5.3\static-mingw\bin\qmake.exe ..\SaidDownloader.pro
-```
+**Option 2 — Enigma Virtual Box**: Pack DLLs inside the `.exe` at the cost of potential antivirus false positives.
 
-На 4 ядрах — 2–3 часа, ~10 ГБ на время сборки. Итог: ~185 МБ одним файлом.
+**Вариант 2 — Enigma Virtual Box**: Упаковать DLL внутрь `.exe` ценой возможных ложных срабатываний антивируса.
 
-Юридический нюанс: статическая линковка Qt под LGPL требует давать
-пользователю возможность перелинковать приложение (объектные файлы либо
-исходники). Коммерческая лицензия Qt это требование снимает; для личного
-использования вопрос не встаёт.
+---
 
-**Вариант 2 — Enigma Virtual Box** (бесплатная утилита, не путать с Enigma
-Protector). Запаковывает DLL внутрь exe и отдаёт их процессу из памяти, минут
-десять работы. Минусы: упакованные exe чаще ловят ложные срабатывания
-антивирусов, и упаковку надо повторять после каждой пересборки.
+## ⚠️ Known Limitations / Известные ограничения
 
-## Размер
+- **Windows only / Только Windows** — uses Windows-specific APIs (`taskkill`, `DwmSetWindowAttribute`) / использует API Windows
+- Tools are extracted to `%TEMP%` — antivirus may flag newly extracted `.exe` files / Утилиты извлекаются в `%TEMP%` — антивирус может заблокировать
+- Extraction runs in the UI thread (with progress) — may feel slow on HDDs / Распаковка идёт в UI-потоке — на HDD может быть медленно
+- The `--update` command updates yt-dlp in the temp folder; the update is lost on app restart / Обновление yt-dlp теряется при перезапуске
 
-Замеры реальные, не прикидки.
+---
 
-| Что | Сырой | В .exe (zlib -9) |
-|---|---|---|
-| ffmpeg.exe (статический full build) | 139.1 МБ | 53.3 МБ |
-| `_internal\` (Python-рантайм) | 22.7 МБ | ~10.5 МБ |
-| yt-dlp.exe (папочная сборка) | 6.9 МБ | 6.8 МБ |
-| Qt + свой код | ~1 МБ | ~1 МБ |
-| **Итого .exe** | | **70.4 МБ** |
+## 📄 License / Лицензия
 
-`yt-dlp.exe` практически не сжимается (98%) — PyInstaller уже упаковал
-содержимое внутри.
+This project is **open source**. You are free to use, modify, and distribute it.
+Этот проект с **открытым исходным кодом**. Вы можете свободно использовать, изменять и распространять его.
 
-Папка целиком:
+---
 
-| Файл | Размер |
-|---|---|
-| SaidDownloader.exe | 70.4 МБ |
-| Qt6Core / Qt6Gui / Qt6Widgets | 22.0 МБ |
-| Рантайм MinGW (3 DLL) | 2.1 МБ |
-| platforms + styles | 1.2 МБ |
-| **Итого dist** | **95.7 МБ** |
+## 🤝 Contributing / Вклад в проект
 
-### Если нужно ещё меньше
+Contributions are welcome! / Вклад приветствуется!
 
-1. **ffmpeg essentials вместо full.** Сборка `ffmpeg-essentials` весит ~85 МБ
-   сырыми против 139 МБ, а для склейки видео со звуком и MP3 её хватает
-   с запасом. В сжатом виде это ~33 МБ вместо 53 МБ — минус 20 МБ.
-2. **Однофайловый yt-dlp.** Со страницы релизов взять именно `yt-dlp.exe`
-   (~17 МБ, Python внутри), положить в `tools\yt-dlp_win\` вместо текущего
-   и удалить из `resources.qrc` весь блок `_internal`. Минус ~1 МБ в сжатом
-   виде — экономия почти нулевая, зато `.qrc` становится на 139 строк короче.
-   Текущий `yt-dlp.exe` — из архива `yt-dlp_win.zip`, он **без `_internal`
-   не работает** (падает с `Failed to load Python DLL python310.dll`).
+- Open issues for bugs or feature requests / Создавайте issues для багов и предложений
+- Submit pull requests / Отправляйте pull requests
+- Fork and customize for your needs / Форкайте и настраивайте под себя
 
-## Упаковка в один файл через Enigma Virtual Box
+---
 
-**Не добавляйте в список файлов сам `SaidDownloader.exe`.** Он и так является
-программой-носителем; если положить его ещё и виртуальным файлом, он окажется
-внутри дважды. Именно так получился блин на 362 МБ вместо 96 МБ.
+## 📱 Contact / Контакты
 
-Добавлять нужно только окружение:
-
-```
-Qt6Core.dll
-Qt6Gui.dll
-Qt6Widgets.dll
-libgcc_s_seh-1.dll
-libstdc++-6.dll
-libwinpthread-1.dll
-platforms\qwindows.dll        <- именно в подпапке platforms
-styles\qwindowsvistastyle.dll <- именно в подпапке styles
-```
-
-И обязательно включить **Files options -> Compress Files**: Qt-DLL жмутся
-до 44%, это ещё минус 14 МБ.
-
-Ожидаемый результат — около 82 МБ одним файлом.
-
-## Про разгон скачивания
-
-Реально работающий многопоточный разгон здесь один — `--concurrent-fragments 16`.
-Он качает 16 фрагментов HLS/DASH одновременно, а это как раз Rutube, VK и
-YouTube.
-
-Аргумент `--downloader-args "native:-N 16"` из первоначального ТЗ **не
-используется** — он не даёт разгона и способен ломать скачивание:
-
-* `-N` — это опция самого yt-dlp (`-N, --concurrent-fragments`), а не аргумент
-  загрузчика. Встроенный движок аргументов командной строки не принимает вовсе.
-* `native` не входит в список известных yt-dlp имён загрузчиков, поэтому строка
-  разбирается как аргументы **без имени**, и yt-dlp предупреждает:
-  `External Downloader arguments given without specifying name. The arguments
-  will be given to all external downloaders`. То есть `-N 16` уходит в том числе
-  в **ffmpeg**, а тот на неизвестной опции `-N` падает. Причём ffmpeg как
-  загрузчик yt-dlp выбирает именно на HLS-потоках — на тех самых Rutube и VK.
-
-Многопоточной загрузки одного цельного файла по одному HTTP-соединению во
-встроенном движке не существует — это умеет только внешний `aria2c`, который по
-условию не используется. Вместо мёртвого аргумента добавлены рабочие:
-`--buffer-size 16K` (вместо дефолтного 1К), `--http-chunk-size 10M` (обход
-тротлинга), `--retries 10`, `--fragment-retries 10`.
-
-Строка с аргументом из ТЗ оставлена в `mainwindow.cpp` в комментарии — если он
-всё же нужен, раскомментировать одну строку.
-
-## Известные ограничения
-
-* Временная папка имеет фиксированное имя `said_downloader`. Два одновременно
-  запущенных экземпляра будут делить её, и закрытие одного удалит утилиты у
-  другого. Для мультизапуска стоит добавить к имени PID процесса.
-* Распаковка идёт в UI-потоке (с `processEvents()` для отзывчивости). ~170 МБ
-  на медленном HDD — это несколько секунд с живым прогрессом.
-* Антивирусы иногда блокируют только что распакованный `.exe` в `%TEMP%` —
-  на этот случай есть отдельное сообщение об ошибке `FailedToStart`.
+Created by **Saidolimxoja** — [Telegram](https://t.me/Saidolimxoja)

@@ -23,7 +23,9 @@
 #include <QRegularExpression>
 #include <QSettings>
 #include <QStandardPaths>
+#include <QStorageInfo>
 #include <QThread>
+#include <QTranslator>
 #include <QUrl>
 #include <QVector>
 
@@ -102,6 +104,30 @@ QPixmap makeTelegramIcon(int size, qreal dpr)
     return pm;
 }
 
+/// Рисует аккуратную иконку вставки из буфера (планшет с листом бумаги).
+QPixmap makePasteIcon(int size, qreal dpr)
+{
+    const int px = int(size * dpr);
+    QPixmap pm(px, px);
+    pm.fill(Qt::transparent);
+    pm.setDevicePixelRatio(dpr);
+
+    QPainter p(&pm);
+    p.setRenderHint(QPainter::Antialiasing, true);
+
+    // Рамка планшета
+    p.setPen(QPen(QColor(0x3B, 0x82, 0xF6), qMax(1.5 * dpr, 1.0)));
+    p.setBrush(Qt::NoBrush);
+    p.drawRoundedRect(QRectF(px * 0.22, px * 0.25, px * 0.56, px * 0.65), px * 0.08, px * 0.08);
+
+    // Верхняя защёлка
+    p.setPen(Qt::NoPen);
+    p.setBrush(QColor(0x3B, 0x82, 0xF6));
+    p.drawRoundedRect(QRectF(px * 0.35, px * 0.15, px * 0.30, px * 0.18), px * 0.04, px * 0.04);
+
+    return pm;
+}
+
 #ifdef Q_OS_WIN
 /// Красит системный заголовок окна в тон приложения.
 void applyLightTitleBar(HWND hwnd)
@@ -151,17 +177,20 @@ MainWindow::MainWindow(QWidget *parent)
     m_ytDlpPath  = QDir(m_workDir).filePath(QStringLiteral("yt-dlp.exe"));
     m_ffmpegPath = QDir(m_workDir).filePath(QStringLiteral("ffmpeg.exe"));
 
+    setupEmbeddedPasteAction();
     loadSettings();
 
-    connect(ui->analyzeButton,     &QPushButton::clicked, this, &MainWindow::onAnalyzeClicked);
-    connect(ui->downloadButton,    &QPushButton::clicked, this, &MainWindow::onDownloadClicked);
-    connect(ui->pasteButton,       &QPushButton::clicked, this, &MainWindow::onPasteClicked);
-    connect(ui->cancelButton,      &QPushButton::clicked, this, &MainWindow::onCancelClicked);
-    connect(ui->browseButton,      &QPushButton::clicked, this, &MainWindow::onBrowseFolderClicked);
-    connect(ui->openFileButton,    &QPushButton::clicked, this, &MainWindow::onOpenFileClicked);
-    connect(ui->openFolderButton,  &QPushButton::clicked, this, &MainWindow::onOpenFolderClicked);
-    connect(ui->telegramButton,    &QPushButton::clicked, this, &MainWindow::onTelegramClicked);
-    connect(ui->videoModeButton,   &QPushButton::toggled, this, &MainWindow::onModeChanged);
+    connect(ui->analyzeButton,      &QPushButton::clicked, this, &MainWindow::onAnalyzeClicked);
+    connect(ui->downloadButton,     &QPushButton::clicked, this, &MainWindow::onDownloadClicked);
+    connect(ui->cancelButton,       &QPushButton::clicked, this, &MainWindow::onCancelClicked);
+    connect(ui->browseButton,       &QPushButton::clicked, this, &MainWindow::onBrowseFolderClicked);
+    connect(ui->cookiesButton,      &QPushButton::clicked, this, &MainWindow::onSelectCustomCookiesClicked);
+    connect(ui->openFileButton,     &QPushButton::clicked, this, &MainWindow::onOpenFileClicked);
+    connect(ui->openFolderButton,   &QPushButton::clicked, this, &MainWindow::onOpenFolderClicked);
+    connect(ui->updateEngineButton, &QPushButton::clicked, this, &MainWindow::onUpdateEngineClicked);
+    connect(ui->telegramButton,     &QPushButton::clicked, this, &MainWindow::onTelegramClicked);
+    connect(ui->languageButton,     &QPushButton::clicked, this, &MainWindow::onLanguageChanged);
+    connect(ui->videoModeButton,    &QPushButton::toggled, this, &MainWindow::onModeChanged);
 
     // Enter в поле ввода = «Разобрать».
     connect(ui->urlLineEdit, &QLineEdit::returnPressed, this, &MainWindow::onAnalyzeClicked);
@@ -297,10 +326,15 @@ bool MainWindow::ensureToolsExtracted()
     ui->progressBar->setRange(0, 100);
     ui->progressBar->setValue(0);
 
+    // Блокируем UI на время распаковки, чтобы processEvents()
+    // не привёл к reentrancy (повторному входу в обработчики).
+    ui->centralwidget->setEnabled(false);
+
     qint64 written = 0;
     QString error;
     for (const Entry &e : entries) {
         if (!extractResourceFile(e.res, e.dest, &error)) {
+            ui->centralwidget->setEnabled(true);
             QMessageBox::critical(this, tr("Ошибка распаковки"),
                 tr("Не удалось подготовить утилиты: %1").arg(error));
             return false;
@@ -314,8 +348,11 @@ bool MainWindow::ensureToolsExtracted()
         setStatus(tr("Подготовка утилит... %1%").arg(percent));
 
         // Держим окно отзывчивым: распаковка идёт в UI-потоке.
-        QCoreApplication::processEvents();
+        // UI заблокирован выше — пользователь не может вызвать reentrancy.
+        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
     }
+
+    ui->centralwidget->setEnabled(true);
 
     ui->progressBar->setValue(0);
     m_toolsReady = true;
@@ -323,21 +360,86 @@ bool MainWindow::ensureToolsExtracted()
 }
 
 
-// =======================================================================
-//  Запуск процессов
-// =======================================================================
+void MainWindow::setupEmbeddedPasteAction()
+{
+    QAction *pasteAction = ui->urlLineEdit->addAction(
+        QIcon(makePasteIcon(16, devicePixelRatioF())),
+        QLineEdit::TrailingPosition
+    );
+    pasteAction->setToolTip(tr("Вставить из буфера обмена"));
+    connect(pasteAction, &QAction::triggered, this, &MainWindow::onPasteClicked);
+}
+
+bool MainWindow::isSocialOrPrivateUrl(const QString &url) const
+{
+    const QString lower = url.toLower();
+    return lower.contains(QStringLiteral("instagram.com")) ||
+           lower.contains(QStringLiteral("instagr.am")) ||
+           lower.contains(QStringLiteral("tiktok.com")) ||
+           lower.contains(QStringLiteral("facebook.com")) ||
+           lower.contains(QStringLiteral("fb.watch")) ||
+           lower.contains(QStringLiteral("twitter.com")) ||
+           lower.contains(QStringLiteral("x.com"));
+}
+
+bool MainWindow::isBrokenSslDomain(const QString &url) const
+{
+    const QString lower = url.toLower();
+    return lower.contains(QStringLiteral("rutube.ru")) ||
+           lower.contains(QStringLiteral("vk.com")) ||
+           lower.contains(QStringLiteral("vkvideo.ru"));
+}
+
+QString MainWindow::currentCookieBrowser() const
+{
+    static const QStringList browsers = {
+                        QStringLiteral("chrome"),
+                        QStringLiteral("edge"),
+                        QStringLiteral("firefox"),
+                        QStringLiteral("brave"),
+                        QStringLiteral("opera")
+                    };
+    if (m_cookieFallbackIndex >= 0 && m_cookieFallbackIndex < browsers.size())
+        return browsers.at(m_cookieFallbackIndex);
+    return QStringLiteral("chrome");
+}
 
 QStringList MainWindow::commonArgs() const
 {
-    return QStringList {
-        QStringLiteral("--no-check-certificate"),   // битые SSL на Rutube/VK
+    const QString url = ui->urlLineEdit->text().trimmed();
+
+    QStringList args {
         QStringLiteral("--no-playlist"),            // ссылка на ролик из плейлиста
         QStringLiteral("--no-colors"),              // без ANSI-мусора в парсере
     };
+
+    // Отключаем проверку SSL только для доменов с известными проблемами.
+    if (isBrokenSslDomain(url))
+        args << QStringLiteral("--no-check-certificate");
+
+    const QString embeddedCookies = QDir(m_workDir).filePath(QStringLiteral("cookies.txt"));
+
+    if (!m_customCookiesPath.isEmpty() && QFile::exists(m_customCookiesPath)) {
+        args << QStringLiteral("--cookies") << m_customCookiesPath;
+    } else if (QFile::exists(embeddedCookies) && QFileInfo(embeddedCookies).size() > 50) {
+        args << QStringLiteral("--cookies") << embeddedCookies;
+    } else if (m_useCookieFallback || isSocialOrPrivateUrl(ui->urlLineEdit->text().trimmed())) {
+        args << QStringLiteral("--cookies-from-browser") << currentCookieBrowser();
+    }
+
+    return args;
 }
 
 void MainWindow::startTask(Task task, const QStringList &args, bool mergeChannels)
 {
+    // Защита от утечки: если предыдущий процесс ещё жив (например,
+    // cookie fallback вызывает startTask повторно).
+    if (m_process) {
+        m_process->disconnect();
+        m_process->deleteLater();
+        m_process = nullptr;
+    }
+
     m_task = task;
     m_outBuffer.clear();
     m_jsonBuffer.clear();
@@ -407,6 +509,9 @@ void MainWindow::onAnalyzeClicked()
     }
 
     m_analyzedUrl = url;
+    m_cookieFallbackIndex = 0;
+    m_useCookieFallback = false;
+    ui->cookiesButton->setVisible(false);
 
     setStatus(tr("Разбираю ролик..."));
     ui->progressBar->setRange(0, 0);   // «бегущая» полоса на время разбора
@@ -425,10 +530,39 @@ void MainWindow::handleAnalyzeFinished()
     const QJsonDocument doc = QJsonDocument::fromJson(m_jsonBuffer, &parseError);
 
     if (parseError.error != QJsonParseError::NoError || !doc.isObject()) {
+        const QString errLower = m_lastError.toLower();
+        const bool isAuthError = errLower.contains(QStringLiteral("login")) ||
+                                 errLower.contains(QStringLiteral("private")) ||
+                                 errLower.contains(QStringLiteral("cookie")) ||
+                                 errLower.contains(QStringLiteral("unauthorized")) ||
+                                 errLower.contains(QStringLiteral("instagram")) ||
+                                 isSocialOrPrivateUrl(m_analyzedUrl);
+
+        if (isAuthError && m_cookieFallbackIndex < 4) {
+            m_cookieFallbackIndex++;
+            m_useCookieFallback = true;
+
+            setStatus(tr("Авторизация: пробую куки %1...").arg(currentCookieBrowser()));
+            ui->progressBar->setRange(0, 0);
+
+            QStringList args = commonArgs();
+            args << QStringLiteral("--dump-single-json")
+                 << QStringLiteral("--no-warnings")
+                 << m_analyzedUrl;
+
+            startTask(Task::Analyzing, args, /*mergeChannels=*/false);
+            return;
+        }
+
         resetProgress();
-        setStatus(m_lastError.isEmpty()
-                      ? tr("Не удалось разобрать ответ yt-dlp. Проверьте ссылку.")
-                      : tr("Ошибка: %1").arg(m_lastError));
+        if (isAuthError) {
+            setStatus(tr("Для просмотра этого видео требуется авторизация в браузере или файл cookies.txt"));
+            ui->cookiesButton->setVisible(true);
+        } else {
+            setStatus(m_lastError.isEmpty()
+                          ? tr("Не удалось разобрать ответ yt-dlp. Проверьте ссылку.")
+                          : tr("Ошибка: %1").arg(m_lastError));
+        }
         setBusy(false);
         return;
     }
@@ -527,12 +661,17 @@ void MainWindow::handleThumbnailFinished()
     QPixmap pix;
     if (pix.load(pngPath) && !pix.isNull()) {
         // Кадрируем по центру: превью бывают и 16:9, и 4:3, и квадратные.
-        const QSize target = ui->thumbLabel->size();
+        // Учитываем devicePixelRatio для чёткости на HiDPI-мониторах.
+        const qreal dpr = devicePixelRatioF();
+        const QSize target(int(ui->thumbLabel->width() * dpr),
+                           int(ui->thumbLabel->height() * dpr));
         QPixmap scaled = pix.scaled(target, Qt::KeepAspectRatioByExpanding,
                                     Qt::SmoothTransformation);
         const int x = (scaled.width()  - target.width())  / 2;
         const int y = (scaled.height() - target.height()) / 2;
-        ui->thumbLabel->setPixmap(scaled.copy(x, y, target.width(), target.height()));
+        QPixmap cropped = scaled.copy(x, y, target.width(), target.height());
+        cropped.setDevicePixelRatio(dpr);
+        ui->thumbLabel->setPixmap(cropped);
         ui->thumbLabel->setText(QString());
     } else {
         ui->thumbLabel->setText(tr("без превью"));
@@ -599,12 +738,26 @@ void MainWindow::handleDownloadFinished(int exitCode, QProcess::ExitStatus exitS
     ui->progressBar->setRange(0, 100);
 
     if (exitStatus == QProcess::NormalExit && exitCode == 0) {
-        ui->progressBar->setValue(100);
-        setStatus(m_lastFileName.isEmpty()
-                      ? tr("Готово! Файл сохранён.")
-                      : tr("Готово: %1 — сохранено в папку %2.")
-                            .arg(m_lastFileName, QDir::toNativeSeparators(m_downloadDir)));
-        showCompletionActions(true);
+        // Валидация: проверяем, что файл действительно существует и не пуст.
+        const bool fileValid = !m_lastFilePath.isEmpty()
+                               && QFile::exists(m_lastFilePath)
+                               && QFileInfo(m_lastFilePath).size() > 0;
+
+        if (fileValid) {
+            ui->progressBar->setValue(100);
+            setStatus(tr("Готово: %1 — сохранено в папку %2.")
+                          .arg(m_lastFileName, QDir::toNativeSeparators(m_downloadDir)));
+            showCompletionActions(true);
+        } else if (m_lastFileName.isEmpty()) {
+            // yt-dlp не сообщил имя файла — показываем общее сообщение.
+            ui->progressBar->setValue(100);
+            setStatus(tr("Готово! Файл сохранён."));
+            showCompletionActions(false);
+        } else {
+            ui->progressBar->setValue(0);
+            setStatus(tr("Файл не найден после скачивания. Возможно, на диске не хватает места."));
+            showCompletionActions(false);
+        }
     } else {
         ui->progressBar->setValue(0);
         setStatus(m_lastError.isEmpty()
@@ -736,8 +889,8 @@ void MainWindow::onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus
         m_outBuffer.clear();
     }
 
-    // При разборе ошибки лежат в stderr — забираем их оттуда.
-    if (m_task == Task::Analyzing && m_process) {
+    // При разборе или обновлении ошибки лежат в stderr — забираем их оттуда.
+    if ((m_task == Task::Analyzing || m_task == Task::UpdatingEngine) && m_process) {
         const QString err = QString::fromLocal8Bit(m_process->readAllStandardError());
         for (const QString &line : err.split(QLatin1Char('\n'))) {
             const QString t = line.trimmed();
@@ -756,9 +909,10 @@ void MainWindow::onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus
 
     switch (finished) {
     case Task::Extracting:                                               break;
-    case Task::Analyzing:   handleAnalyzeFinished();                     break;
-    case Task::Thumbnail:   handleThumbnailFinished();                   break;
-    case Task::Downloading: handleDownloadFinished(exitCode, exitStatus); break;
+    case Task::Analyzing:      handleAnalyzeFinished();                  break;
+    case Task::Thumbnail:      handleThumbnailFinished();                break;
+    case Task::Downloading:    handleDownloadFinished(exitCode, exitStatus); break;
+    case Task::UpdatingEngine: handleUpdateEngineFinished(exitCode);    break;
     case Task::Idle:                                                     break;
     }
 }
@@ -919,6 +1073,17 @@ void MainWindow::loadSettings()
     if (m_downloadDir.isEmpty() || !QDir(m_downloadDir).exists())
         m_downloadDir = defaultDir;
 
+    // Язык интерфейса: по умолчанию русский (строки в коде на русском).
+    m_language = settings.value(QStringLiteral("Language"), QStringLiteral("ru")).toString();
+    if (m_language == QStringLiteral("en")) {
+        m_translator = new QTranslator(this);
+        if (m_translator->load(QStringLiteral(":/i18n/app_en.qm"))) {
+            QCoreApplication::installTranslator(m_translator);
+            ui->retranslateUi(this);
+            retranslateCustomUi();
+        }
+    }
+
     updateDownloadDirLabel();
 }
 
@@ -926,6 +1091,7 @@ void MainWindow::saveSettings()
 {
     QSettings settings(QStringLiteral("Said"), QStringLiteral("SaidDownloader"));
     settings.setValue(QStringLiteral("DownloadDir"), m_downloadDir);
+    settings.setValue(QStringLiteral("Language"), m_language);
 }
 
 void MainWindow::updateDownloadDirLabel()
@@ -969,8 +1135,9 @@ void MainWindow::setBusy(bool busy)
     ui->analyzeButton->setEnabled(!busy);
     ui->downloadButton->setEnabled(!busy);
     ui->urlLineEdit->setEnabled(!busy);
-    ui->pasteButton->setEnabled(!busy);
     ui->browseButton->setEnabled(!busy);
+    ui->cookiesButton->setEnabled(!busy);
+    ui->updateEngineButton->setEnabled(!busy);
     ui->videoModeButton->setEnabled(!busy);
     ui->audioModeButton->setEnabled(!busy);
     ui->qualityCombo->setEnabled(!busy && ui->videoModeButton->isChecked());
@@ -986,6 +1153,58 @@ void MainWindow::setBusy(bool busy)
     ui->downloadButton->setText(busy && m_task == Task::Downloading
                                     ? tr("Качаю...")
                                     : tr("Скачать"));
+}
+
+void MainWindow::onSelectCustomCookiesClicked()
+{
+    const QString file = QFileDialog::getOpenFileName(
+        this,
+        tr("Выберите файл cookies.txt"),
+        QString(),
+        tr("Файлы cookies (*.txt);;Все файлы (*.*)")
+    );
+
+    if (file.isEmpty())
+        return;
+
+    m_customCookiesPath = file;
+    ui->cookiesButton->setText(tr("🍪 Куки: %1").arg(QFileInfo(file).fileName()));
+    ui->cookiesButton->setVisible(true);
+
+    setStatus(tr("Загружен файл куков %1. Повторный разбор...").arg(QFileInfo(file).fileName()));
+    onAnalyzeClicked();
+}
+
+void MainWindow::onUpdateEngineClicked()
+{
+    if (m_process && m_process->state() != QProcess::NotRunning)
+        return;
+
+    setBusy(true);
+    showCard(false);
+
+    if (!ensureToolsExtracted()) {
+        setBusy(false);
+        return;
+    }
+
+    setStatus(tr("Проверка и обновление парсеров yt-dlp..."));
+    ui->progressBar->setRange(0, 0);
+
+    startTask(Task::UpdatingEngine, QStringList{ QStringLiteral("--update") }, /*mergeChannels=*/true);
+}
+
+void MainWindow::handleUpdateEngineFinished(int exitCode)
+{
+    resetProgress();
+    if (exitCode == 0) {
+        setStatus(tr("Парсеры yt-dlp успешно обновлены до последней версии!"));
+    } else {
+        setStatus(m_lastError.isEmpty()
+                      ? tr("Не удалось обновить yt-dlp (код %1)").arg(exitCode)
+                      : tr("Ошибка обновления: %1").arg(m_lastError));
+    }
+    setBusy(false);
 }
 
 void MainWindow::setStatus(const QString &text)
@@ -1021,4 +1240,51 @@ QString MainWindow::formatDuration(qint64 seconds)
                      .arg(s, 2, 10, QLatin1Char('0'))
                : QStringLiteral("%1:%2").arg(m)
                      .arg(s, 2, 10, QLatin1Char('0'));
+}
+
+
+// =======================================================================
+//  Переключение языка
+// =======================================================================
+
+void MainWindow::onLanguageChanged()
+{
+    if (m_language == QStringLiteral("ru")) {
+        // Переключаемся на английский.
+        m_language = QStringLiteral("en");
+        if (!m_translator) {
+            m_translator = new QTranslator(this);
+        }
+        if (m_translator->load(QStringLiteral(":/i18n/app_en.qm"))) {
+            QCoreApplication::installTranslator(m_translator);
+        }
+    } else {
+        // Переключаемся на русский (удаляем переводчик).
+        m_language = QStringLiteral("ru");
+        if (m_translator) {
+            QCoreApplication::removeTranslator(m_translator);
+        }
+    }
+
+    // Обновляем все тексты виджетов.
+    ui->retranslateUi(this);
+    retranslateCustomUi();
+    saveSettings();
+}
+
+void MainWindow::retranslateCustomUi()
+{
+    // Тексты, выставленные программно (не из .ui), нужно обновить вручную.
+    ui->versionChip->setText(QStringLiteral("v%1").arg(QCoreApplication::applicationVersion()));
+
+    // Кнопка языка показывает, НА КАКОЙ язык можно переключиться.
+    ui->languageButton->setText(m_language == QStringLiteral("ru")
+                                    ? QStringLiteral("\xF0\x9F\x8C\x90 EN")
+                                    : QStringLiteral("\xF0\x9F\x8C\x90 RU"));
+
+    // Обновляем статус и путь.
+    if (m_task == Task::Idle) {
+        setStatus(tr("Вставьте ссылку и нажмите «Разобрать»"));
+    }
+    updateDownloadDirLabel();
 }

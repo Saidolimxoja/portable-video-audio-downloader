@@ -5,7 +5,7 @@ dist-v1/
 *.zip
 .qtcreator/
 .remember/
-
+cookies.txt
 # Кэш qmake и Makefile
 *.qmake.stash
 Makefile*
@@ -15,3 +15,18 @@ debug/
 # Объектные файлы
 *.o
 *.obj
+
+# Сгенерированные файлы Qt
+moc_*
+ui_*
+qrc_*
+
+# Файлы проекта Qt Creator
+*.user
+*.pro.user*
+
+# IDE
+.vscode/
+
+# Скомпилированные переводы (генерируются из .ts через lrelease)
+translations/*.qm

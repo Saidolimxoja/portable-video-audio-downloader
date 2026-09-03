@@ -88,3 +88,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 # Иконка приложения (вшивается в свойства и ярлык .exe на Windows)
 RC_ICONS = app.ico
+
+# Переводы интерфейса. Компилировать:  lrelease translations/app_en.ts
+# Результат (app_en.qm) вшивается в ресурсы как :/i18n/app_en.qm.
+TRANSLATIONS += translations/app_en.ts

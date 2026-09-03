@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QProcess>
 #include <QString>
+#include <QTranslator>
 #include <QStringList>
 
 #include <QDragEnterEvent>
@@ -32,10 +33,11 @@ private:
     /// Чем именно занят текущий QProcess.
     enum class Task {
         Idle,
-        Extracting,   ///< Фоновая распаковка ресурсов
-        Analyzing,    ///< yt-dlp --dump-single-json
-        Thumbnail,    ///< выкачивание превью
-        Downloading   ///< собственно скачивание
+        Extracting,     ///< Фоновая распаковка ресурсов
+        Analyzing,      ///< yt-dlp --dump-single-json
+        Thumbnail,      ///< выкачивание превью
+        Downloading,    ///< собственно скачивание
+        UpdatingEngine  ///< обновление yt-dlp --update
     };
 
 private slots:
@@ -46,8 +48,11 @@ private slots:
     void onBrowseFolderClicked();
     void onOpenFileClicked();
     void onOpenFolderClicked();
+    void onSelectCustomCookiesClicked();
+    void onUpdateEngineClicked();
     void onModeChanged();
     void onTelegramClicked();
+    void onLanguageChanged();
 
     void onReadyReadOutput();
     void onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus);
@@ -57,11 +62,16 @@ private:
     // ---- запуск yt-dlp -------------------------------------------------
     void startTask(Task task, const QStringList &args, bool mergeChannels);
     QStringList commonArgs() const;
+    bool isSocialOrPrivateUrl(const QString &url) const;
+    bool isBrokenSslDomain(const QString &url) const;
+    QString currentCookieBrowser() const;
+    void setupEmbeddedPasteAction();
 
     // ---- шаги сценария -------------------------------------------------
     void handleAnalyzeFinished();
     void handleThumbnailFinished();
     void handleDownloadFinished(int exitCode, QProcess::ExitStatus exitStatus);
+    void handleUpdateEngineFinished(int exitCode);
     void startThumbnailFetch();
 
     // ---- утилиты и файловая часть -------------------------------------
@@ -86,6 +96,7 @@ private:
     void setStatus(const QString &text);
     void showCard(bool visible);
     void resetProgress();
+    void retranslateCustomUi();
     static QString formatDuration(qint64 seconds);
 
     Ui::MainWindow *ui;
@@ -108,6 +119,15 @@ private:
     QString m_downloadDir;           ///< Пользовательская папка загрузки
     bool    m_toolsReady = false;
     Task    m_pendingTaskAfterExtract = Task::Idle;
+
+    // ---- куки и динамическая авторизация ------------------------------
+    int     m_cookieFallbackIndex = 0;   ///< 0: Chrome, 1: Edge, 2: Firefox, 3: Brave, 4: Opera
+    bool    m_useCookieFallback = false;
+    QString m_customCookiesPath;
+
+    // ---- i18n -----------------------------------------------------------
+    QTranslator *m_translator = nullptr;
+    QString      m_language;             ///< "ru" or "en"
 };
 
 #endif // MAINWINDOW_H
