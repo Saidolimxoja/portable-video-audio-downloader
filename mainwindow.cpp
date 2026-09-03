@@ -128,6 +128,34 @@ QPixmap makePasteIcon(int size, qreal dpr)
     return pm;
 }
 
+/// Рисует аккуратную векторную иконку глобуса для переключения языка.
+QPixmap makeGlobeIcon(int size, qreal dpr)
+{
+    const int px = int(size * dpr);
+    QPixmap pm(px, px);
+    pm.fill(Qt::transparent);
+    pm.setDevicePixelRatio(dpr);
+
+    QPainter p(&pm);
+    p.setRenderHint(QPainter::Antialiasing, true);
+
+    QPen pen(QColor(0x64, 0x74, 0x8B), qMax(1.2 * dpr, 1.0));
+    p.setPen(pen);
+    p.setBrush(Qt::NoBrush);
+
+    // Внешний круг
+    const QRectF r(px * 0.12, px * 0.12, px * 0.76, px * 0.76);
+    p.drawEllipse(r);
+
+    // Экватор (горизонтальная линия)
+    p.drawLine(QPointF(px * 0.12, px * 0.50), QPointF(px * 0.88, px * 0.50));
+
+    // Меридиан (вертикальный эллипс)
+    p.drawEllipse(QRectF(px * 0.30, px * 0.12, px * 0.40, px * 0.76));
+
+    return pm;
+}
+
 #ifdef Q_OS_WIN
 /// Красит системный заголовок окна в тон приложения.
 void applyLightTitleBar(HWND hwnd)
@@ -163,6 +191,10 @@ MainWindow::MainWindow(QWidget *parent)
     // Иконка Telegram рисуется в рантайме.
     ui->telegramButton->setIcon(QIcon(makeTelegramIcon(16, devicePixelRatioF())));
     ui->telegramButton->setIconSize(QSize(16, 16));
+
+    // Иконка переключения языка (глобус)
+    ui->languageButton->setIcon(QIcon(makeGlobeIcon(14, devicePixelRatioF())));
+    ui->languageButton->setIconSize(QSize(14, 14));
 
     ui->infoCard->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);
     ui->videoRow->setAlignment(ui->thumbLabel, Qt::AlignTop);
@@ -1279,8 +1311,8 @@ void MainWindow::retranslateCustomUi()
 
     // Кнопка языка показывает, НА КАКОЙ язык можно переключиться.
     ui->languageButton->setText(m_language == QStringLiteral("ru")
-                                    ? QStringLiteral("\xF0\x9F\x8C\x90 EN")
-                                    : QStringLiteral("\xF0\x9F\x8C\x90 RU"));
+                                    ? QStringLiteral("EN")
+                                    : QStringLiteral("RU"));
 
     // Обновляем статус и путь.
     if (m_task == Task::Idle) {

@@ -44,7 +44,7 @@
       <item>
        <widget class="QPushButton" name="languageButton">
         <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
-        <property name="text"><string>🌐 EN</string></property>
+        <property name="text"><string>EN</string></property>
         <property name="flat"><bool>true</bool></property>
        </widget>
       </item>
